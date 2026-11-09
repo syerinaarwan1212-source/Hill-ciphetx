@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas Kriptografi - Hill Cipher (Kasus 1 & 2)</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 30px 15px; min-height: 100vh; }
+        .container { background-color: var(--card); width: 100%; max-width: 800px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); overflow: hidden; border: 1px solid var(--border); }
+        
+        .header { background: linear-gradient(135deg, #4c1d95, #6d28d9); padding: 25px; text-align: center; }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { color: #ddd6fe; font-size: 14px; }
+        
+        .tabs { display: flex; background-color: #0b1121; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab-btn { flex: 1; padding: 15px 10px; border: none; background: none; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+        .tab-btn:hover { color: var(--text); background-color: rgba(255,255,255,0.05); }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); background-color: var(--card); }
+        
+        .content-area { padding: 25px; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background-color: #0f172a; color: white; font-size: 15px; outline: none; }
+        input[type="text"]:focus { border-color: var(--primary); }
+        
+        .matrix-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .matrix-grid input { text-align: center; font-weight: bold; }
+
+        button.action-btn { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button.action-btn:hover { background-color: var(--primary-hover); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+
+        .result-box { margin-top: 25px; border-top: 1px dashed var(--border); padding-top: 20px; }
+        .output-text { background-color: #0f172a; border: 1px solid var(--primary); color: var(--primary); padding: 15px; border-radius: 8px; font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 2px; margin-bottom: 15px; word-break: break-all; }
+        
+        .log-box { background-color: #000000; color: var(--success); padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border); }
+        .log-error { color: var(--danger); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Hill Cipher (2x2)</h1>
+        <p>Tugas Kriptografi - Kasus 1 & 2 (Enkripsi & Deskripsi)</p>
+    </div>
+
+    <!-- MENU TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'kasus1-enkripsi')">Kasus 1: Enkripsi</button>
+        <button class="tab-btn" onclick="openTab(event, 'kasus1-deskripsi')">Kasus 1: Deskripsi</button>
+        <button class="tab-btn" onclick="openTab(event, 'kasus2-enkripsi')">Kasus 2: Enkripsi</button>
+        <button class="tab-btn" onclick="openTab(event, 'kasus2-deskripsi')">Kasus 2: Deskripsi</button>
+    </div>
+
+    <div class="content-area">
+        
+        <!-- TAB 1: KASUS 1 ENKRIPSI -->
+        <div id="kasus1-enkripsi" class="tab-content active">
+            <h3 style="margin-bottom: 20px; color: #a78bfa;">Proses Enkripsi Kasus 1</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Matriks Kunci (K):</label>
+                    <div class="matrix-grid">
+                        <input type="text" id="k1_11" value="5">
+                        <input type="text" id="k1_12" value="6">
+                        <input type="text" id="k1_21" value="2">
+                        <input type="text" id="k1_22" value="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Plainteks (Teks Asli):</label>
+                    <input type="text" id="p1_enc" value="HILL CIPHER TIDAK SULIT">
+                </div>
+            </div>
+            <button class="action-btn" onclick="prosesEnkripsi(1)">Proses Enkripsi (Kunci &rarr; Cipher)</button>
+            <div class="result-box" id="res1_enc" style="display:none;">
+                <label>Hasil Cipherteks:</label>
+                <div class="output-text" id="out1_enc">-</div>
+                <label>Log Perhitungan:</label>
+                <div class="log-box" id="log1_enc"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: KASUS 1 DESKRIPSI -->
+        <div id="kasus1-deskripsi" class="tab-content">
+            <h3 style="margin-bottom: 20px; color: #a78bfa;">Proses Deskripsi Kasus 1</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Matriks Kunci Asli (K):</label>
+                    <div class="matrix-grid">
+                        <input type="text" id="k1_dec_11" value="5">
+                        <input type="text" id="k1_dec_12" value="6">
+                        <input type="text" id="k1_dec_21" value="2">
+                        <input type="text" id="k1_dec_22" value="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cipherteks (Teks Rahasia):</label>
+                    <input type="text" id="c1_dec" value="FMRDGCNZSHNKPGCWKVYV">
+                </div>
+            </div>
+            <button class="action-btn" onclick="prosesDeskripsi(1)">Proses Deskripsi (Kunci &rarr; Plainteks)</button>
+            <div class="result-box" id="res1_dec" style="display:none;">
+                <label>Hasil Plainteks:</label>
+                <div class="output-text" id="out1_dec" style="border-color: var(--success); color: var(--success);">-</div>
+                <label>Log Perhitungan:</label>
+                <div class="log-box" id="log1_dec"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: KASUS 2 ENKRIPSI -->
+        <div id="kasus2-enkripsi" class="tab-content">
+            <h3 style="margin-bottom: 20px; color: #a78bfa;">Proses Enkripsi Kasus 2</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Matriks Kunci (K):</label>
+                    <div class="matrix-grid">
+                        <input type="text" id="k2_11" value="5">
+                        <input type="text" id="k2_12" value="8">
+                        <input type="text" id="k2_21" value="17">
+                        <input type="text" id="k2_22" value="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Plainteks (Teks Asli):</label>
+                    <input type="text" id="p2_enc" value="SAYA PUSING">
+                </div>
+            </div>
+            <button class="action-btn" onclick="prosesEnkripsi(2)">Proses Enkripsi (Kunci &rarr; Cipher)</button>
+            <div class="result-box" id="res2_enc" style="display:none;">
+                <label>Hasil Cipherteks:</label>
+                <div class="output-text" id="out2_enc">-</div>
+                <label>Log Perhitungan:</label>
+                <div class="log-box" id="log2_enc"></div>
+            </div>
+        </div>
+
+        <!-- TAB 4: KASUS 2 DESKRIPSI -->
+        <div id="kasus2-deskripsi" class="tab-content">
+            <h3 style="margin-bottom: 20px; color: #a78bfa;">Proses Deskripsi Kasus 2</h3>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Matriks Kunci Asli (K):</label>
+                    <div class="matrix-grid">
+                        <input type="text" id="k2_dec_11" value="5">
+                        <input type="text" id="k2_dec_12" value="8">
+                        <input type="text" id="k2_dec_21" value="17">
+                        <input type="text" id="k2_dec_22" value="3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cipherteks (Teks Rahasia):</label>
+                    <input type="text" id="c2_dec" value="MUQSBDYSJF">
+                </div>
+            </div>
+            <button class="action-btn" onclick="prosesDeskripsi(2)">Proses Deskripsi (Kunci &rarr; Plainteks)</button>
+            <div class="result-box" id="res2_dec" style="display:none;">
+                <label>Hasil Plainteks:</label>
+                <div class="output-text" id="out2_dec" style="border-color: var(--success); color: var(--success);">-</div>
+                <label>Log Perhitungan:</label>
+                <div class="log-box" id="log2_dec"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Fungsi untuk ganti tab
+    function openTab(evt, tabName) {
+        let tabContents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].classList.remove("active");
+        }
+        let tabBtns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < tabBtns.length; i++) {
+            tabBtns[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Fungsi Modulo yang aman dari angka negatif
+    function mod(n, m) {
+        return ((n % m) + m) % m;
+    }
+
+    // Fungsi Invers Modulo (Extended Euclidean)
+    function modInverse(a, m) {
+        a = mod(a, m);
+        for (let x = 1; x < m; x++) {
+            if (mod(a * x, m) === 1) return x;
+        }
+        return -1; // Tidak ada invers
+    }
+
+    function prosesEnkripsi(kasus) {
+        let k11, k12, k21, k22, plaintext;
+        if(kasus === 1) {
+            k11 = parseInt(document.getElementById('k1_11').value); k12 = parseInt(document.getElementById('k1_12').value);
+            k21 = parseInt(document.getElementById('k1_21').value); k22 = parseInt(document.getElementById('k1_22').value);
+            plaintext = document.getElementById('p1_enc').value;
+        } else {
+            k11 = parseInt(document.getElementById('k2_11').value); k12 = parseInt(document.getElementById('k2_12').value);
+            k21 = parseInt(document.getElementById('k2_21').value); k22 = parseInt(document.getElementById('k2_22').value);
+            plaintext = document.getElementById('p2_enc').value;
+        }
+
+        let text = "";
+        for (let i = 0; i < plaintext.length; i++) {
+            let char = plaintext[i].toUpperCase();
+            if (char >= 'A' && char <= 'Z') text += char;
+        }
+        if (text.length % 2 !== 0) text += 'X';
+        
+        let ciphertext = "";
+        let logText = `=== PROSES ENKRIPSI (C = K . P mod 26) ===\nPlainteks Bersih: ${text}\n\n`;
+        
+        for (let i = 0; i < text.length; i += 2) {
+            let char1 = text[i], char2 = text[i+1];
+            let p1 = char1.charCodeAt(0) - 65;
+            let p2 = char2.charCodeAt(0) - 65;
+            
+            let c1_raw = (k11 * p1) + (k12 * p2);
+            let c2_raw = (k21 * p1) + (k22 * p2);
+            
+            let c1 = mod(c1_raw, 26);
+            let c2 = mod(c2_raw, 26);
+            
+            let c1_char = String.fromCharCode(c1 + 65);
+            let c2_char = String.fromCharCode(c2 + 65);
+            ciphertext += c1_char + c2_char;
+            
+            logText += `Blok [${char1}${char2}] (Indeks: ${p1}, ${p2})\n`;
+            logText += `  C1 = (${k11}*${p1} + ${k12}*${p2}) mod 26 = ${c1} (${c1_char})\n`;
+            logText += `  C2 = (${k21}*${p1} + ${k22}*${p2}) mod 26 = ${c2} (${c2_char})\n\n`;
+        }
+
+        if(kasus === 1) {
+            document.getElementById('res1_enc').style.display = 'block';
+            document.getElementById('out1_enc').innerText = ciphertext;
+            document.getElementById('log1_enc').innerText = logText;
+        } else {
+            document.getElementById('res2_enc').style.display = 'block';
+            document.getElementById('out2_enc').innerText = ciphertext;
+            document.getElementById('log2_enc').innerText = logText;
+        }
+    }
+
+    function prosesDeskripsi(kasus) {
+        let k11, k12, k21, k22, ciphertext;
+        if(kasus === 1) {
+            k11 = parseInt(document.getElementById('k1_dec_11').value); k12 = parseInt(document.getElementById('k1_dec_12').value);
+            k21 = parseInt(document.getElementById('k1_dec_21').value); k22 = parseInt(document.getElementById('k1_dec_22').value);
+            ciphertext = document.getElementById('c1_dec').value;
+        } else {
+            k11 = parseInt(document.getElementById('k2_dec_11').value); k12 = parseInt(document.getElementById('k2_dec_12').value);
+            k21 = parseInt(document.getElementById('k2_dec_21').value); k22 = parseInt(document.getElementById('k2_dec_22').value);
+            ciphertext = document.getElementById('c2_dec').value;
+        }
+
+        let text = "";
+        for (let i = 0; i < ciphertext.length; i++) {
+            let char = ciphertext[i].toUpperCase();
+            if (char >= 'A' && char <= 'Z') text += char;
+        }
+
+        let logText = `=== PROSES DESKRIPSI (P = K^-1 . C mod 26) ===\nCipherteks Bersih: ${text}\n\n`;
+
+        // 1. Cari Determinan
+        let det = mod((k11 * k22) - (k12 * k21), 26);
+        logText += `1. Determinan: (${k11}*${k22}) - (${k12}*${k21}) = ${det} (mod 26)\n`;
+
+        // 2. Cari Invers Determinan
+        let detInv = modInverse(det, 26);
+        if (detInv === -1) {
+            logText += `\n[ERROR] Determinan (${det}) tidak memiliki invers modulo 26!`;
+            logText += `\nKarena FPB(${det}, 26) bukan 1. Matriks kunci ini tidak bisa dideskripsi secara matematis.`;
+            
+            if(kasus === 1) {
+                document.getElementById('res1_dec').style.display = 'block';
+                document.getElementById('out1_dec').innerText = "GAGAL (Kunci Tidak Valid)";
+                document.getElementById('out1_dec').style.borderColor = "var(--danger)";
+                document.getElementById('out1_dec').style.color = "var(--danger)";
+                document.getElementById('log1_dec').innerHTML = `<span class="log-error">${logText}</span>`;
+            } else {
+                document.getElementById('res2_dec').style.display = 'block';
+                document.getElementById('out2_dec').innerText = "GAGAL (Kunci Tidak Valid)";
+                document.getElementById('out2_dec').style.borderColor = "var(--danger)";
+                document.getElementById('out2_dec').style.color = "var(--danger)";
+                document.getElementById('log2_dec').innerHTML = `<span class="log-error">${logText}</span>`;
+            }
+            return;
+        }
+        logText += `2. Invers dari Determinan: Invers dari ${det} (mod 26) adalah ${detInv}\n`;
+
+        // 3. Bentuk Matriks Invers
+        let inv11 = mod(k22 * detInv, 26);
+        let inv12 = mod(-k12 * detInv, 26);
+        let inv21 = mod(-k21 * detInv, 26);
+        let inv22 = mod(k11 * detInv, 26);
+        logText += `3. Matriks Invers (K^-1):\n   [${inv11}  ${inv12}]\n   [${inv21}  ${inv22}]\n\n`;
+
+        // 4. Proses Deskripsi
+        let plaintext = "";
+        for (let i = 0; i < text.length; i += 2) {
+            let char1 = text[i], char2 = text[i+1];
+            let c1 = char1.charCodeAt(0) - 65;
+            let c2 = char2.charCodeAt(0) - 65;
+            
+            let p1_raw = (inv11 * c1) + (inv12 * c2);
+            let p2_raw = (inv21 * c1) + (inv22 * c2);
+            
+            let p1 = mod(p1_raw, 26);
+            let p2 = mod(p2_raw, 26);
+            
+            let p1_char = String.fromCharCode(p1 + 65);
+            let p2_char = String.fromCharCode(p2 + 65);
+            plaintext += p1_char + p2_char;
+            
+            logText += `Blok [${char1}${char2}] (Indeks: ${c1}, ${c2})\n`;
+            logText += `  P1 = (${inv11}*${c1} + ${inv12}*${c2}) mod 26 = ${p1} (${p1_char})\n`;
+            logText += `  P2 = (${inv21}*${c1} + ${inv22}*${c2}) mod 26 = ${p2} (${p2_char})\n\n`;
+        }
+
+        if(kasus === 1) {
+            document.getElementById('res1_dec').style.display = 'block';
+            document.getElementById('out1_dec').innerText = plaintext;
+            document.getElementById('out1_dec').style.borderColor = "var(--success)";
+            document.getElementById('out1_dec').style.color = "var(--success)";
+            document.getElementById('log1_dec').innerText = logText;
+        } else {
+            document.getElementById('res2_dec').style.display = 'block';
+            document.getElementById('out2_dec').innerText = plaintext;
+            document.getElementById('out2_dec').style.borderColor = "var(--success)";
+            document.getElementById('out2_dec').style.color = "var(--success)";
+            document.getElementById('log2_dec').innerText = logText;
+        }
+    }
+</script>
+
+</body>
+</html>
